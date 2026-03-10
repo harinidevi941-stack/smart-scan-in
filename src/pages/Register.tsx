@@ -22,6 +22,10 @@ export default function Register() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startCamera = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error('Camera not available. Try opening this app in a new browser tab or use "Upload Photo" instead.');
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
       streamRef.current = stream;
@@ -30,8 +34,13 @@ export default function Register() {
         await videoRef.current.play();
       }
       setCapturing(true);
-    } catch {
-      toast.error('Could not access camera');
+    } catch (error) {
+      console.error('Camera error:', error);
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        toast.error('Camera access denied. Please allow camera permissions in your browser settings.');
+      } else {
+        toast.error('Could not access camera. Try opening the app directly in a new tab, or use "Upload Photo" instead.');
+      }
     }
   };
 
